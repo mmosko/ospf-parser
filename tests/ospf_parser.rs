@@ -294,3 +294,32 @@ pub fn test_lsa_type7() {
         panic!("wrong lsa type");
     }
 }
+
+#[test]
+pub fn test_link_state_request_with_auth() {
+        let lsa_request_bytes: Vec<u8> = vec![
+            0x2,        // version
+            0x3,        // packet type
+            0x0, 0x24,  // packet length (36)
+            0x2, 0x2, 0x2, 0x2,     // router
+            0x0, 0x0, 0x0, 0x0,     // area
+            0x0, 0x0,               // checksum
+            0x0, 0x2,               // au type
+            0x0, 0x0, 0x1, 0x10,    // authentication
+            0x69, 0xa, 0xc0, 0xb2,
+            // -----
+            0x0, 0x0, 0x0, 0x1,     // LS type
+            0x1, 0x1, 0x1, 0x1,     // link state ID
+            0x1, 0x1, 0x1, 0x1,     // adv. router
+            // -----
+            // signature
+            0x98, 0x35, 0xda, 0x13, 0xd5, 0x3f, 0xe9, 0x51,
+            0xd8, 0x40, 0xf4, 0xab, 0x10, 0x17, 0xc0, 0x2c];
+
+    let (remaining, ospfv2_packet) = ospf_parser::parse_ospfv2_packet(&lsa_request_bytes).unwrap();
+    let Ospfv2Packet::LinkStateRequest(lsa_request) = ospfv2_packet else {
+        panic!("failed to parse Ospfv2");
+    };
+    assert_eq!(*remaining, lsa_request_bytes[36..52]);
+    assert_eq!(lsa_request.requests.len(), 1);
+}
