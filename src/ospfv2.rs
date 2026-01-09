@@ -1,8 +1,13 @@
 use crate::parser::{parse_ospf_external_tos_routes, parse_ospf_tos_routes, parse_ospf_vec_u32};
+use nom::bytes::complete::take;
+use nom::combinator::complete;
+use nom::combinator::map_parser;
+use nom::multi::many0;
 use nom::number::streaming::be_u24;
 use nom_derive::*;
 use rusticata_macros::newtype_enum;
 use std::net::Ipv4Addr;
+
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, NomBE)]
 pub struct OspfPacketType(pub u8);
@@ -143,6 +148,11 @@ pub struct OspfDatabaseDescriptionPacket {
 pub struct OspfLinkStateRequestPacket {
     #[nom(Verify = "header.packet_type == OspfPacketType::LinkStateRequest")]
     pub header: Ospfv2PacketHeader,
+    // Subtract the 24-byte OSPF header from total packet_length
+    #[nom(Parse = "{
+        let len = (header.packet_length as usize).saturating_sub(24);
+        map_parser(take(len), many0(complete(OspfLinkStateRequest::parse_be)))
+    }")]
     pub requests: Vec<OspfLinkStateRequest>,
 }
 
@@ -213,6 +223,11 @@ pub struct OspfLinkStateUpdatePacket {
 pub struct OspfLinkStateAcknowledgmentPacket {
     #[nom(Verify = "header.packet_type == OspfPacketType::LinkStateAcknowledgment")]
     pub header: Ospfv2PacketHeader,
+    // Subtract the 24-byte OSPF header from total packet_length
+    #[nom(Parse = "{
+        let len = (header.packet_length as usize).saturating_sub(24);
+        map_parser(take(len), many0(complete(OspfLinkStateAdvertisementHeader::parse_be)))
+    }")]
     pub lsa_headers: Vec<OspfLinkStateAdvertisementHeader>,
 }
 
