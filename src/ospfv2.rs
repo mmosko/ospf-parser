@@ -690,7 +690,7 @@ impl fmt::Display for OspfTosRoute {
 /// AS external link advertisements usually describe a particular
 /// external destination.  For these advertisements the Link State ID
 /// field specifies an IP network number (if necessary, the Link State
-
+///
 /// ID can also have one or more of the network's "host" bits set; see
 /// Appendix F for details).  AS external link advertisements are also
 /// used to describe a default route.  Default routes are used when no

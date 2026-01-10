@@ -87,7 +87,7 @@ pub fn parse_ospfv2_link_state_request_packet(
     OspfLinkStateRequestPacket::parse(input)
 }
 
-impl<'a> Parse<&'a [u8]> for OspfLinkStateAdvertisement {
+impl Parse<& [u8]> for OspfLinkStateAdvertisement {
     fn parse(input: &[u8]) -> IResult<&[u8], OspfLinkStateAdvertisement> {
         let (_, word) = peek(be_u32)(input)?;
         let ls_type = (word & 0xff) as u8;
@@ -133,7 +133,7 @@ impl<'a> Parse<&'a [u8]> for OspfLinkStateAdvertisement {
     }
 }
 
-impl<'a> Parse<&'a [u8]> for Ospfv3LinkStateAdvertisement {
+impl Parse<&[u8]> for Ospfv3LinkStateAdvertisement {
     fn parse(input: &[u8]) -> IResult<&[u8], Ospfv3LinkStateAdvertisement> {
         let (_, word) = peek(be_u32)(input)?;
         let ls_type = (word & 0xffff) as u16;
