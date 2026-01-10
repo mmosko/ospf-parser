@@ -1,3 +1,4 @@
+use std::fmt;
 use crate::parser::{parse_ospf_external_tos_routes, parse_ospf_tos_routes, parse_ospf_vec_u32};
 use nom::bytes::complete::take;
 use nom::combinator::complete;
@@ -57,6 +58,21 @@ impl Ospfv2PacketHeader {
     }
 }
 
+impl fmt::Display for Ospfv2PacketHeader {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Ospfv2PacketHeader {{ ")?;
+        write!(f, "version: {}, ", self.version)?;
+        write!(f, "packet_type: {} ({}), ", self.packet_type, self.packet_type.0)?;
+        write!(f, "packet_length: {}, ", self.packet_length)?;
+        write!(f, "router_id: {}, ", Ipv4Addr::from(self.router_id))?;
+        write!(f, "area_id: {}, ", Ipv4Addr::from(self.area_id))?;
+        write!(f, "checksum: {:#06X}, ", self.checksum)?;
+        write!(f, "au_type: {}, ", self.au_type)?;
+        write!(f, "authentication: {:#018X}", self.authentication)?;
+        write!(f, " }}")
+    }
+}
+
 /// The Hello packet
 ///
 /// Hello packets are OSPF packet type 1.  These packets are sent
@@ -103,6 +119,27 @@ impl OspfHelloPacket {
     }
 }
 
+impl fmt::Display for OspfHelloPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let neighbors: Vec<String> = self
+            .neighbor_list
+            .iter()
+            .map(|&n| Ipv4Addr::from(n).to_string())
+            .collect();
+        write!(f, "OspfHelloPacket {{ ")?;
+        write!(f, "header: {}, ", self.header)?;
+        write!(f, "network_mask: {}, ", Ipv4Addr::from(self.network_mask))?;
+        write!(f, "hello_interval: {}, ", self.hello_interval)?;
+        write!(f, "options: {:#04X}, ", self.options)?;
+        write!(f, "router_priority: {}, ", self.router_priority)?;
+        write!(f, "router_dead_interval: {}, ", self.router_dead_interval)?;
+        write!(f, "designated_router: {}, ", Ipv4Addr::from(self.designated_router))?;
+        write!(f, "backup_designated_router: {}, ", Ipv4Addr::from(self.backup_designated_router))?;
+        write!(f, "neighbor_list: [{}]", neighbors.join(", "))?;
+        write!(f, " }}")
+    }
+}
+
 /// The Database Description packet
 ///
 /// Database Description packets are OSPF packet type 2.  These packets
@@ -123,6 +160,26 @@ pub struct OspfDatabaseDescriptionPacket {
     pub flags: u8,
     pub dd_sequence_number: u32,
     pub lsa_headers: Vec<OspfLinkStateAdvertisementHeader>,
+}
+
+impl fmt::Display for OspfDatabaseDescriptionPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfDatabaseDescriptionPacket {{ ")?;
+        write!(f, "header: {}, ", self.header)?;
+        write!(f, "if_mtu: {}, ", self.if_mtu)?;
+        write!(f, "options: {:#04X}, ", self.options)?;
+        write!(f, "flags: {:#04X}, ", self.flags)?;
+        write!(f, "dd_sequence_number: {:#010X}, ", self.dd_sequence_number)?;
+        write!(f, "lsa_headers: [")?;
+        for (i, lsa) in self.lsa_headers.iter().enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}", lsa)?;
+        }
+        write!(f, "]")?;
+        write!(f, " }}")
+    }
 }
 
 /// The Link State Request packet
@@ -156,6 +213,22 @@ pub struct OspfLinkStateRequestPacket {
     pub requests: Vec<OspfLinkStateRequest>,
 }
 
+impl fmt::Display for OspfLinkStateRequestPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfLinkStateRequestPacket {{ ")?;
+        write!(f, "header: {}, ", self.header)?;
+        write!(f, "requests: [")?;
+        for (i, req) in self.requests.iter().enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}", req)?;
+        }
+        write!(f, "]")?;
+        write!(f, " }}")
+    }
+}
+
 #[derive(Debug, NomBE)]
 pub struct OspfLinkStateRequest {
     // XXX should be a OspfLinkStateType, but it is only an u8
@@ -171,6 +244,16 @@ impl OspfLinkStateRequest {
 
     pub fn advertising_router(&self) -> Ipv4Addr {
         Ipv4Addr::from(self.advertising_router)
+    }
+}
+
+impl fmt::Display for OspfLinkStateRequest {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfLinkStateRequest {{ ")?;
+        write!(f, "link_state_type: {}, ", self.link_state_type)?;
+        write!(f, "link_state_id: {}, ", Ipv4Addr::from(self.link_state_id))?;
+        write!(f, "advertising_router: {}", Ipv4Addr::from(self.advertising_router))?;
+        write!(f, " }}")
     }
 }
 
@@ -197,6 +280,23 @@ pub struct OspfLinkStateUpdatePacket {
     pub num_advertisements: u32,
     #[nom(Count = "num_advertisements")]
     pub lsa: Vec<OspfLinkStateAdvertisement>,
+}
+
+impl fmt::Display for OspfLinkStateUpdatePacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfLinkStateUpdatePacket {{ ")?;
+        write!(f, "header: {}, ", self.header)?;
+        write!(f, "num_advertisements: {}, ", self.num_advertisements)?;
+        write!(f, "lsa: [")?;
+        for (i, lsa) in self.lsa.iter().enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}", lsa)?;
+        }
+        write!(f, "]")?;
+        write!(f, " }}")
+    }
 }
 
 /// The Link State Acknowledgment packet
@@ -231,21 +331,53 @@ pub struct OspfLinkStateAcknowledgmentPacket {
     pub lsa_headers: Vec<OspfLinkStateAdvertisementHeader>,
 }
 
+impl fmt::Display for OspfLinkStateAcknowledgmentPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfLinkStateAcknowledgmentPacket {{ ")?;
+        write!(f, "header: {}, ", self.header)?;
+        write!(f, "lsa_headers: [")?;
+        for (i, lsa) in self.lsa_headers.iter().enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}", lsa)?;
+        }
+        write!(f, "]")?;
+        write!(f, " }}")
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, NomBE)]
 pub struct OspfLinkStateType(pub u8);
 
-newtype_enum! {
-impl display OspfLinkStateType {
-    RouterLinks = 1,
-    NetworkLinks = 2,
-    SummaryLinkIpNetwork = 3,
-    SummaryLinkAsbr = 4,
-    ASExternalLink = 5,
-    NSSAASExternal = 7,
-    OpaqueLinkLocalScope = 9,
-    OpaqueAreaLocalScope = 10,
-    OpaqueASWideScope = 11,
+impl OspfLinkStateType {
+    pub const ROUTER_LINKS: OspfLinkStateType = OspfLinkStateType(1);
+    pub const NETWORK_LINKS: OspfLinkStateType = OspfLinkStateType(2);
+    pub const SUMMARY_LINK_IP_NETWORK: OspfLinkStateType = OspfLinkStateType(3);
+    pub const SUMMARY_LINK_ASBR: OspfLinkStateType = OspfLinkStateType(4);
+    pub const AS_EXTERNAL_LINK: OspfLinkStateType = OspfLinkStateType(5);
+    pub const NSSA_AS_EXTERNAL: OspfLinkStateType = OspfLinkStateType(7);
+    pub const OPAQUE_LINK_LOCAL_SCOPE: OspfLinkStateType = OspfLinkStateType(9);
+    pub const OPAQUE_AREA_LOCAL_SCOPE: OspfLinkStateType = OspfLinkStateType(10);
+    pub const OPAQUE_AS_WIDE_SCOPE: OspfLinkStateType = OspfLinkStateType(11);
 }
+
+impl fmt::Display for OspfLinkStateType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match *self {
+            OspfLinkStateType::ROUTER_LINKS => "RouterLinks",
+            OspfLinkStateType::NETWORK_LINKS => "NetworkLinks",
+            OspfLinkStateType::SUMMARY_LINK_IP_NETWORK => "SummaryLinkIpNetwork",
+            OspfLinkStateType::SUMMARY_LINK_ASBR => "SummaryLinkAsbr",
+            OspfLinkStateType::AS_EXTERNAL_LINK => "ASExternalLink",
+            OspfLinkStateType::NSSA_AS_EXTERNAL => "NSSAASExternal",
+            OspfLinkStateType::OPAQUE_LINK_LOCAL_SCOPE => "OpaqueLinkLocalScope",
+            OspfLinkStateType::OPAQUE_AREA_LOCAL_SCOPE => "OpaqueAreaLocalScope",
+            OspfLinkStateType::OPAQUE_AS_WIDE_SCOPE => "OpaqueASWideScope",
+            _ => "Unknown",
+        };
+        write!(f, "{}", s)
+    }
 }
 
 /// The Link State Advertisement header
@@ -280,6 +412,21 @@ impl OspfLinkStateAdvertisementHeader {
     }
 }
 
+impl fmt::Display for OspfLinkStateAdvertisementHeader {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfLinkStateAdvertisementHeader {{ ")?;
+        write!(f, "ls_age: {}, ", self.ls_age)?;
+        write!(f, "options: {:#04X}, ", self.options)?;
+        write!(f, "link_state_type: {} ({}), ", self.link_state_type, self.link_state_type.0)?;
+        write!(f, "link_state_id: {}, ", Ipv4Addr::from(self.link_state_id))?;
+        write!(f, "advertising_router: {}, ", Ipv4Addr::from(self.advertising_router))?;
+        write!(f, "ls_seq_number: {:#010X}, ", self.ls_seq_number)?;
+        write!(f, "ls_checksum: {:#06X}, ", self.ls_checksum)?;
+        write!(f, "length: {}", self.length)?;
+        write!(f, " }}")
+    }
+}
+
 /// Link state advertisements
 #[derive(Debug)]
 pub enum OspfLinkStateAdvertisement {
@@ -294,6 +441,22 @@ pub enum OspfLinkStateAdvertisement {
     OpaqueASWideScope(OspfOpaqueLinkAdvertisement),
 }
 
+impl fmt::Display for OspfLinkStateAdvertisement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            OspfLinkStateAdvertisement::RouterLinks(lsa) => write!(f, "{}", lsa),
+            OspfLinkStateAdvertisement::NetworkLinks(lsa) => write!(f, "{}", lsa),
+            OspfLinkStateAdvertisement::SummaryLinkIpNetwork(lsa) => write!(f, "{}", lsa),
+            OspfLinkStateAdvertisement::SummaryLinkAsbr(lsa) => write!(f, "{}", lsa),
+            OspfLinkStateAdvertisement::ASExternalLink(lsa) => write!(f, "{}", lsa),
+            OspfLinkStateAdvertisement::NSSAASExternal(lsa) => write!(f, "{}", lsa),
+            OspfLinkStateAdvertisement::OpaqueLinkLocalScope(lsa) => write!(f, "{}", lsa),
+            OspfLinkStateAdvertisement::OpaqueAreaLocalScope(lsa) => write!(f, "{}", lsa),
+            OspfLinkStateAdvertisement::OpaqueASWideScope(lsa) => write!(f, "{}", lsa),
+        }
+    }
+}
+
 /// Router links advertisements
 ///
 /// Router links advertisements are the Type 1 link state
@@ -305,7 +468,7 @@ pub enum OspfLinkStateAdvertisement {
 /// router links advertisements, see Section 12.4.1.
 #[derive(Debug, NomBE)]
 pub struct OspfRouterLinksAdvertisement {
-    #[nom(Verify = "header.link_state_type == OspfLinkStateType::RouterLinks")]
+    #[nom(Verify = "header.link_state_type == OspfLinkStateType::ROUTER_LINKS")]
     pub header: OspfLinkStateAdvertisementHeader,
     pub flags: u16,
     pub num_links: u16,
@@ -313,16 +476,45 @@ pub struct OspfRouterLinksAdvertisement {
     pub links: Vec<OspfRouterLink>,
 }
 
+impl fmt::Display for OspfRouterLinksAdvertisement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfRouterLinksAdvertisement {{ ")?;
+        write!(f, "header: {}, ", self.header)?;
+        write!(f, "flags: {}, ", self.flags)?;
+        write!(f, "num_links: {}, ", self.num_links)?;
+        write!(f, "links: [")?;
+        for (i, link) in self.links.iter().enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}", link)?;
+        }
+        write!(f, "]")?;
+        write!(f, " }}")
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, NomBE)]
 pub struct OspfRouterLinkType(pub u8);
 
-newtype_enum! {
-impl display OspfRouterLinkType {
-    PointToPoint = 1,
-    Transit = 2,
-    Stub = 3,
-    Virtual = 4,
+impl OspfRouterLinkType {
+    pub const POINT_TO_POINT: OspfRouterLinkType = OspfRouterLinkType(1);
+    pub const TRANSIT: OspfRouterLinkType = OspfRouterLinkType(2);
+    pub const STUB: OspfRouterLinkType = OspfRouterLinkType(3);
+    pub const VIRTUAL: OspfRouterLinkType = OspfRouterLinkType(4);
 }
+
+impl fmt::Display for OspfRouterLinkType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match *self {
+            OspfRouterLinkType::POINT_TO_POINT => "PointToPoint",
+            OspfRouterLinkType::TRANSIT => "Transit",
+            OspfRouterLinkType::STUB => "Stub",
+            OspfRouterLinkType::VIRTUAL => "Virtual",
+            _ => "Unknown",
+        };
+        write!(f, "{}", s)
+    }
 }
 
 /// OSPF router link (i.e., interface)
@@ -335,6 +527,26 @@ pub struct OspfRouterLink {
     pub tos_0_metric: u16,
     #[nom(Count = "num_tos")]
     pub tos_list: Vec<OspfRouterTOS>,
+}
+
+impl fmt::Display for OspfRouterLink {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfRouterLink {{ ")?;
+        write!(f, "link_id: {}, ", Ipv4Addr::from(self.link_id))?;
+        write!(f, "link_data: {}, ", Ipv4Addr::from(self.link_data))?;
+        write!(f, "link_type: {} ({}), ", self.link_type, self.link_type.0)?;
+        write!(f, "num_tos: {}, ", self.num_tos)?;
+        write!(f, "tos_0_metric: {}, ", self.tos_0_metric)?;
+        write!(f, "tos_list: [")?;
+        for (i, tos) in self.tos_list.iter().enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}", tos)?;
+        }
+        write!(f, "]")?;
+        write!(f, " }}")
+    }
 }
 
 impl OspfRouterLink {
@@ -353,6 +565,16 @@ pub struct OspfRouterTOS {
     pub tos: u8,
     pub reserved: u8,
     pub metric: u16,
+}
+
+impl fmt::Display for OspfRouterTOS {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfRouterTOS {{ ")?;
+        write!(f, "tos: {}, ", self.tos)?;
+        write!(f, "reserved: {}, ", self.reserved)?;
+        write!(f, "metric: {}", self.metric)?;
+        write!(f, " }}")
+    }
 }
 
 /// Network links advertisements
@@ -374,12 +596,27 @@ pub struct OspfRouterTOS {
 /// Section 12.4.2.
 #[derive(Debug, NomBE)]
 pub struct OspfNetworkLinksAdvertisement {
-    #[nom(Verify = "header.link_state_type == OspfLinkStateType::NetworkLinks")]
+    #[nom(Verify = "header.link_state_type == OspfLinkStateType::NETWORK_LINKS")]
     pub header: OspfLinkStateAdvertisementHeader,
     pub network_mask: u32,
     // limit parsing to (length-xxx) bytes
     #[nom(Parse = "parse_ospf_vec_u32(header.length, 24)")]
     pub attached_routers: Vec<u32>,
+}
+
+impl fmt::Display for OspfNetworkLinksAdvertisement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let routers: Vec<String> = self
+            .attached_routers
+            .iter()
+            .map(|&r| Ipv4Addr::from(r).to_string())
+            .collect();
+        write!(f, "OspfNetworkLinksAdvertisement {{ ")?;
+        write!(f, "header: {}, ", self.header)?;
+        write!(f, "network_mask: {}, ", Ipv4Addr::from(self.network_mask))?;
+        write!(f, "attached_routers: [{}]", routers.join(", "))?;
+        write!(f, " }}")
+    }
 }
 
 impl OspfNetworkLinksAdvertisement {
@@ -414,8 +651,8 @@ impl OspfNetworkLinksAdvertisement {
 #[derive(Debug, NomBE)]
 pub struct OspfSummaryLinkAdvertisement {
     #[nom(
-        Verify = "header.link_state_type == OspfLinkStateType::SummaryLinkIpNetwork ||
-        header.link_state_type == OspfLinkStateType::SummaryLinkAsbr"
+        Verify = "header.link_state_type == OspfLinkStateType::SUMMARY_LINK_IP_NETWORK ||
+        header.link_state_type == OspfLinkStateType::SUMMARY_LINK_ASBR"
     )]
     pub header: OspfLinkStateAdvertisementHeader,
     pub network_mask: u32,
@@ -425,6 +662,25 @@ pub struct OspfSummaryLinkAdvertisement {
     // limit parsing to (length-xxx) bytes
     #[nom(Parse = "parse_ospf_tos_routes(header.length)")]
     pub tos_routes: Vec<OspfTosRoute>,
+}
+
+impl fmt::Display for OspfSummaryLinkAdvertisement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfSummaryLinkAdvertisement {{ ")?;
+        write!(f, "header: {}, ", self.header)?;
+        write!(f, "network_mask: {}, ", Ipv4Addr::from(self.network_mask))?;
+        write!(f, "tos: {}, ", self.tos)?;
+        write!(f, "metric: {}, ", self.metric)?;
+        write!(f, "tos_routes: [")?;
+        for (i, route) in self.tos_routes.iter().enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}", route)?;
+        }
+        write!(f, "]")?;
+        write!(f, " }}")
+    }
 }
 
 impl OspfSummaryLinkAdvertisement {
@@ -440,6 +696,15 @@ pub struct OspfTosRoute {
     pub metric: u32,
 }
 
+impl fmt::Display for OspfTosRoute {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfTosRoute {{ ")?;
+        write!(f, "tos: {}, ", self.tos)?;
+        write!(f, "metric: {}", self.metric)?;
+        write!(f, " }}")
+    }
+}
+
 /// AS external link advertisements
 ///
 /// AS external link advertisements are the Type 5 link state
@@ -452,6 +717,7 @@ pub struct OspfTosRoute {
 /// AS external link advertisements usually describe a particular
 /// external destination.  For these advertisements the Link State ID
 /// field specifies an IP network number (if necessary, the Link State
+
 /// ID can also have one or more of the network's "host" bits set; see
 /// Appendix F for details).  AS external link advertisements are also
 /// used to describe a default route.  Default routes are used when no
@@ -460,7 +726,7 @@ pub struct OspfTosRoute {
 /// (0.0.0.0) and the Network Mask is set to 0.0.0.0.
 #[derive(Debug, NomBE)]
 pub struct OspfASExternalLinkAdvertisement {
-    #[nom(Verify = "header.link_state_type == OspfLinkStateType::ASExternalLink")]
+    #[nom(Verify = "header.link_state_type == OspfLinkStateType::AS_EXTERNAL_LINK")]
     pub header: OspfLinkStateAdvertisementHeader,
     pub network_mask: u32,
     pub external_and_reserved: u8,
@@ -471,6 +737,27 @@ pub struct OspfASExternalLinkAdvertisement {
     // limit parsing to (length-xxx) bytes
     #[nom(Parse = "parse_ospf_external_tos_routes(header.length)")]
     pub tos_list: Vec<OspfExternalTosRoute>,
+}
+
+impl fmt::Display for OspfASExternalLinkAdvertisement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfASExternalLinkAdvertisement {{ ")?;
+        write!(f, "header: {}, ", self.header)?;
+        write!(f, "network_mask: {}, ", Ipv4Addr::from(self.network_mask))?;
+        write!(f, "external_and_reserved: {}, ", self.external_and_reserved)?;
+        write!(f, "metric: {}, ", self.metric)?;
+        write!(f, "forwarding_address: {}, ", Ipv4Addr::from(self.forwarding_address))?;
+        write!(f, "external_route_tag: {}, ", self.external_route_tag)?;
+        write!(f, "tos_list: [")?;
+        for (i, tos) in self.tos_list.iter().enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}", tos)?;
+        }
+        write!(f, "]")?;
+        write!(f, " }}")
+    }
 }
 
 impl OspfASExternalLinkAdvertisement {
@@ -491,6 +778,17 @@ pub struct OspfExternalTosRoute {
     pub external_route_tag: u32,
 }
 
+impl fmt::Display for OspfExternalTosRoute {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfExternalTosRoute {{ ")?;
+        write!(f, "tos: {}, ", self.tos)?;
+        write!(f, "metric: {}, ", self.metric)?;
+        write!(f, "forwarding_address: {}, ", Ipv4Addr::from(self.forwarding_address))?;
+        write!(f, "external_route_tag: {}", self.external_route_tag)?;
+        write!(f, " }}")
+    }
+}
+
 impl OspfExternalTosRoute {
     pub fn forwarding_address(&self) -> Ipv4Addr {
         Ipv4Addr::from(self.forwarding_address)
@@ -500,7 +798,7 @@ impl OspfExternalTosRoute {
 /// NSSA AS-External LSA (type 7, rfc1587, rfc3101)
 #[derive(Debug, NomBE)]
 pub struct OspfNSSAExternalLinkAdvertisement {
-    #[nom(Verify = "header.link_state_type == OspfLinkStateType::NSSAASExternal")]
+    #[nom(Verify = "header.link_state_type == OspfLinkStateType::NSSA_AS_EXTERNAL")]
     pub header: OspfLinkStateAdvertisementHeader,
     pub network_mask: u32,
     pub external_and_tos: u8,
@@ -511,6 +809,27 @@ pub struct OspfNSSAExternalLinkAdvertisement {
     // limit parsing to (length-xxx) bytes
     #[nom(Parse = "parse_ospf_external_tos_routes(header.length)")]
     pub tos_list: Vec<OspfExternalTosRoute>,
+}
+
+impl fmt::Display for OspfNSSAExternalLinkAdvertisement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfNSSAExternalLinkAdvertisement {{ ")?;
+        write!(f, "header: {}, ", self.header)?;
+        write!(f, "network_mask: {}, ", Ipv4Addr::from(self.network_mask))?;
+        write!(f, "external_and_tos: {}, ", self.external_and_tos)?;
+        write!(f, "metric: {}, ", self.metric)?;
+        write!(f, "forwarding_address: {}, ", Ipv4Addr::from(self.forwarding_address))?;
+        write!(f, "external_route_tag: {}, ", self.external_route_tag)?;
+        write!(f, "tos_list: [")?;
+        for (i, tos) in self.tos_list.iter().enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}", tos)?;
+        }
+        write!(f, "]")?;
+        write!(f, " }}")
+    }
 }
 
 impl OspfNSSAExternalLinkAdvertisement {
@@ -541,12 +860,21 @@ impl OspfNSSAExternalLinkAdvertisement {
 #[derive(Debug, NomBE)]
 pub struct OspfOpaqueLinkAdvertisement {
     #[nom(
-        Verify = "header.link_state_type == OspfLinkStateType::OpaqueLinkLocalScope ||
-        header.link_state_type == OspfLinkStateType::OpaqueAreaLocalScope ||
-        header.link_state_type == OspfLinkStateType::OpaqueASWideScope"
+        Verify = "header.link_state_type == OspfLinkStateType::OPAQUE_LINK_LOCAL_SCOPE ||
+        header.link_state_type == OspfLinkStateType::OPAQUE_AREA_LOCAL_SCOPE ||
+        header.link_state_type == OspfLinkStateType::OPAQUE_AS_WIDE_SCOPE"
     )]
     pub header: OspfLinkStateAdvertisementHeader,
     pub data: Vec<u8>,
+}
+
+impl fmt::Display for OspfOpaqueLinkAdvertisement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OspfOpaqueLinkAdvertisement {{ ")?;
+        write!(f, "header: {}, ", self.header)?;
+        write!(f, "data: {:X?}", self.data)?;
+        write!(f, " }}")
+    }
 }
 
 impl OspfOpaqueLinkAdvertisement {

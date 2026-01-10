@@ -160,7 +160,7 @@ pub fn test_ls_update() {
         assert_eq!(pkt.lsa.len(), 1);
         let lsa0 = &pkt.lsa[0];
         if let OspfLinkStateAdvertisement::RouterLinks(lsa) = lsa0 {
-            assert_eq!(lsa.header.link_state_type, OspfLinkStateType::RouterLinks);
+            assert_eq!(lsa.header.link_state_type, OspfLinkStateType::ROUTER_LINKS);
             assert_eq!(
                 lsa.header.advertising_router(),
                 Ipv4Addr::new(192, 168, 170, 8)
@@ -169,7 +169,7 @@ pub fn test_ls_update() {
             let link0 = &lsa.links[0];
             assert_eq!(link0.link_id(), Ipv4Addr::new(192, 168, 170, 0));
             assert_eq!(link0.link_data(), Ipv4Addr::new(255, 255, 255, 0));
-            assert_eq!(link0.link_type, OspfRouterLinkType::Stub);
+            assert_eq!(link0.link_type, OspfRouterLinkType::STUB);
             assert_eq!(link0.tos_list.len(), 0);
         } else {
             panic!("wrong LSA type");
@@ -322,4 +322,172 @@ pub fn test_link_state_request_with_auth() {
     };
     assert_eq!(*remaining, lsa_request_bytes[36..52]);
     assert_eq!(lsa_request.requests.len(), 1);
+}
+
+#[test]
+pub fn test_ospfv2_packet_header_display() {
+    let header = Ospfv2PacketHeader {
+        version: 2,
+        packet_type: OspfPacketType::Hello,
+        packet_length: 42,
+        router_id: Ipv4Addr::new(10, 1, 1, 1).into(),
+        area_id: 0,
+        checksum: 0xABCD,
+        au_type: 2,
+        authentication: 0x0102030405060708,
+    };
+    let s = format!("{}", header);
+    assert!(s.contains("version: 2"));
+    assert!(s.contains("packet_type: Hello (1)"));
+    assert!(s.contains("packet_length: 42"));
+    assert!(s.contains("router_id: 10.1.1.1"));
+    assert!(s.contains("area_id: 0.0.0.0"));
+    assert!(s.contains("checksum: 0xABCD"));
+    assert!(s.contains("au_type: 2"));
+    assert!(s.contains("authentication: 0x0102030405060708"));
+}
+
+#[test]
+pub fn test_ospf_hello_packet_display() {
+    let header = Ospfv2PacketHeader {
+        version: 2,
+        packet_type: OspfPacketType::Hello,
+        packet_length: 56,
+        router_id: Ipv4Addr::new(10, 1, 1, 1).into(),
+        area_id: 0,
+        checksum: 0xABCD,
+        au_type: 2,
+        authentication: 0x0102030405060708,
+    };
+    let hello_packet = OspfHelloPacket {
+        header,
+        network_mask: Ipv4Addr::new(255, 255, 255, 0).into(),
+        hello_interval: 10,
+        options: 0x42,
+        router_priority: 1,
+        router_dead_interval: 40,
+        designated_router: Ipv4Addr::new(10, 1, 1, 2).into(),
+        backup_designated_router: Ipv4Addr::new(10, 1, 1, 3).into(),
+        neighbor_list: vec![
+            Ipv4Addr::new(10, 1, 1, 4).into(),
+            Ipv4Addr::new(10, 1, 1, 5).into(),
+        ],
+    };
+    let s = format!("{}", hello_packet);
+    assert!(s.contains("network_mask: 255.255.255.0"));
+    assert!(s.contains("options: 0x42"));
+    assert!(s.contains("designated_router: 10.1.1.2"));
+    assert!(s.contains("backup_designated_router: 10.1.1.3"));
+    assert!(s.contains(r#"neighbor_list: [10.1.1.4, 10.1.1.5]"#));
+}
+
+#[test]
+pub fn test_ospf_database_description_packet_display() {
+    let header = Ospfv2PacketHeader {
+        version: 2,
+        packet_type: OspfPacketType::DatabaseDescription,
+        packet_length: 68,
+        router_id: Ipv4Addr::new(10, 1, 1, 1).into(),
+        area_id: 0,
+        checksum: 0xABCD,
+        au_type: 2,
+        authentication: 0x0102030405060708,
+    };
+    let lsa_header = OspfLinkStateAdvertisementHeader {
+        ls_age: 3600,
+        options: 0x42,
+        link_state_type: OspfLinkStateType::ROUTER_LINKS,
+        link_state_id: Ipv4Addr::new(10, 1, 1, 2).into(),
+        advertising_router: Ipv4Addr::new(10, 1, 1, 1).into(),
+        ls_seq_number: 0x80000001,
+        ls_checksum: 0x1234,
+        length: 20,
+    };
+    let db_packet = OspfDatabaseDescriptionPacket {
+        header,
+        if_mtu: 1500,
+        options: 0x42,
+        flags: 0x07,
+        dd_sequence_number: 12345,
+        lsa_headers: vec![lsa_header],
+    };
+    let s = format!("{}", db_packet);
+    assert!(s.contains("if_mtu: 1500"));
+    assert!(s.contains("options: 0x42"));
+    assert!(s.contains("flags: 0x07"));
+    assert!(s.contains("dd_sequence_number: 0x00003039"));
+    assert!(s.contains("lsa_headers: ["));
+    assert!(s.contains("ls_age: 3600"));
+    assert!(s.contains("link_state_type: RouterLinks (1)"));
+    assert!(s.contains("link_state_id: 10.1.1.2"));
+    assert!(s.contains("advertising_router: 10.1.1.1"));
+    assert!(s.contains("ls_seq_number: 0x80000001"));
+    assert!(s.contains("ls_checksum: 0x1234"));
+}
+
+#[test]
+pub fn test_ospf_link_state_request_packet_display() {
+    let header = Ospfv2PacketHeader {
+        version: 2,
+        packet_type: OspfPacketType::LinkStateRequest,
+        packet_length: 48,
+        router_id: Ipv4Addr::new(10, 1, 1, 1).into(),
+        area_id: 0,
+        checksum: 0xABCD,
+        au_type: 2,
+        authentication: 0x0102030405060708,
+    };
+    let request = OspfLinkStateRequest {
+        link_state_type: 1,
+        link_state_id: Ipv4Addr::new(10, 1, 1, 2).into(),
+        advertising_router: Ipv4Addr::new(10, 1, 1, 1).into(),
+    };
+    let req_packet = OspfLinkStateRequestPacket {
+        header,
+        requests: vec![request],
+    };
+    let s = format!("{}", req_packet);
+    assert!(s.contains("requests: ["));
+    assert!(s.contains("link_state_type: 1"));
+    assert!(s.contains("link_state_id: 10.1.1.2"));
+    assert!(s.contains("advertising_router: 10.1.1.1"));
+}
+
+#[test]
+pub fn test_ospf_link_state_update_packet_display() {
+    let header = Ospfv2PacketHeader {
+        version: 2,
+        packet_type: OspfPacketType::LinkStateUpdate,
+        packet_length: 68,
+        router_id: Ipv4Addr::new(10, 1, 1, 1).into(),
+        area_id: 0,
+        checksum: 0xABCD,
+        au_type: 2,
+        authentication: 0x0102030405060708,
+    };
+    let lsa_header = OspfLinkStateAdvertisementHeader {
+        ls_age: 3600,
+        options: 0x42,
+        link_state_type: OspfLinkStateType::ROUTER_LINKS,
+        link_state_id: Ipv4Addr::new(10, 1, 1, 2).into(),
+        advertising_router: Ipv4Addr::new(10, 1, 1, 1).into(),
+        ls_seq_number: 0x80000001,
+        ls_checksum: 0x1234,
+        length: 20,
+    };
+    let router_lsa = OspfRouterLinksAdvertisement {
+        header: lsa_header,
+        flags: 0,
+        num_links: 0,
+        links: vec![],
+    };
+    let lsu_packet = OspfLinkStateUpdatePacket {
+        header,
+        num_advertisements: 1,
+        lsa: vec![OspfLinkStateAdvertisement::RouterLinks(router_lsa)],
+    };
+    let s = format!("{}", lsu_packet);
+    assert!(s.contains("num_advertisements: 1"));
+    assert!(s.contains("lsa: ["));
+    assert!(s.contains("ls_age: 3600"));
 }
