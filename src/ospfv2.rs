@@ -350,34 +350,18 @@ impl fmt::Display for OspfLinkStateAcknowledgmentPacket {
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, NomBE)]
 pub struct OspfLinkStateType(pub u8);
 
-impl OspfLinkStateType {
-    pub const ROUTER_LINKS: OspfLinkStateType = OspfLinkStateType(1);
-    pub const NETWORK_LINKS: OspfLinkStateType = OspfLinkStateType(2);
-    pub const SUMMARY_LINK_IP_NETWORK: OspfLinkStateType = OspfLinkStateType(3);
-    pub const SUMMARY_LINK_ASBR: OspfLinkStateType = OspfLinkStateType(4);
-    pub const AS_EXTERNAL_LINK: OspfLinkStateType = OspfLinkStateType(5);
-    pub const NSSA_AS_EXTERNAL: OspfLinkStateType = OspfLinkStateType(7);
-    pub const OPAQUE_LINK_LOCAL_SCOPE: OspfLinkStateType = OspfLinkStateType(9);
-    pub const OPAQUE_AREA_LOCAL_SCOPE: OspfLinkStateType = OspfLinkStateType(10);
-    pub const OPAQUE_AS_WIDE_SCOPE: OspfLinkStateType = OspfLinkStateType(11);
+newtype_enum! {
+impl display OspfLinkStateType {
+    RouterLinks = 1,
+    NetworkLinks = 2,
+    SummaryLinkIpNetwork = 3,
+    SummaryLinkAsbr = 4,
+    ASExternalLink = 5,
+    NSSAASExternal = 7,
+    OpaqueLinkLocalScope = 9,
+    OpaqueAreaLocalScope = 10,
+    OpaqueASWideScope = 11,
 }
-
-impl fmt::Display for OspfLinkStateType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let s = match *self {
-            OspfLinkStateType::ROUTER_LINKS => "RouterLinks",
-            OspfLinkStateType::NETWORK_LINKS => "NetworkLinks",
-            OspfLinkStateType::SUMMARY_LINK_IP_NETWORK => "SummaryLinkIpNetwork",
-            OspfLinkStateType::SUMMARY_LINK_ASBR => "SummaryLinkAsbr",
-            OspfLinkStateType::AS_EXTERNAL_LINK => "ASExternalLink",
-            OspfLinkStateType::NSSA_AS_EXTERNAL => "NSSAASExternal",
-            OspfLinkStateType::OPAQUE_LINK_LOCAL_SCOPE => "OpaqueLinkLocalScope",
-            OspfLinkStateType::OPAQUE_AREA_LOCAL_SCOPE => "OpaqueAreaLocalScope",
-            OspfLinkStateType::OPAQUE_AS_WIDE_SCOPE => "OpaqueASWideScope",
-            _ => "Unknown",
-        };
-        write!(f, "{}", s)
-    }
 }
 
 /// The Link State Advertisement header
@@ -468,7 +452,7 @@ impl fmt::Display for OspfLinkStateAdvertisement {
 /// router links advertisements, see Section 12.4.1.
 #[derive(Debug, NomBE)]
 pub struct OspfRouterLinksAdvertisement {
-    #[nom(Verify = "header.link_state_type == OspfLinkStateType::ROUTER_LINKS")]
+    #[nom(Verify = "header.link_state_type == OspfLinkStateType::RouterLinks")]
     pub header: OspfLinkStateAdvertisementHeader,
     pub flags: u16,
     pub num_links: u16,
@@ -497,24 +481,13 @@ impl fmt::Display for OspfRouterLinksAdvertisement {
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, NomBE)]
 pub struct OspfRouterLinkType(pub u8);
 
-impl OspfRouterLinkType {
-    pub const POINT_TO_POINT: OspfRouterLinkType = OspfRouterLinkType(1);
-    pub const TRANSIT: OspfRouterLinkType = OspfRouterLinkType(2);
-    pub const STUB: OspfRouterLinkType = OspfRouterLinkType(3);
-    pub const VIRTUAL: OspfRouterLinkType = OspfRouterLinkType(4);
+newtype_enum! {
+impl display OspfRouterLinkType {
+    PointToPoint = 1,
+    Transit = 2,
+    Stub = 3,
+    Virtual = 4,
 }
-
-impl fmt::Display for OspfRouterLinkType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let s = match *self {
-            OspfRouterLinkType::POINT_TO_POINT => "PointToPoint",
-            OspfRouterLinkType::TRANSIT => "Transit",
-            OspfRouterLinkType::STUB => "Stub",
-            OspfRouterLinkType::VIRTUAL => "Virtual",
-            _ => "Unknown",
-        };
-        write!(f, "{}", s)
-    }
 }
 
 /// OSPF router link (i.e., interface)
@@ -596,7 +569,7 @@ impl fmt::Display for OspfRouterTOS {
 /// Section 12.4.2.
 #[derive(Debug, NomBE)]
 pub struct OspfNetworkLinksAdvertisement {
-    #[nom(Verify = "header.link_state_type == OspfLinkStateType::NETWORK_LINKS")]
+    #[nom(Verify = "header.link_state_type == OspfLinkStateType::NetworkLinks")]
     pub header: OspfLinkStateAdvertisementHeader,
     pub network_mask: u32,
     // limit parsing to (length-xxx) bytes
@@ -651,8 +624,8 @@ impl OspfNetworkLinksAdvertisement {
 #[derive(Debug, NomBE)]
 pub struct OspfSummaryLinkAdvertisement {
     #[nom(
-        Verify = "header.link_state_type == OspfLinkStateType::SUMMARY_LINK_IP_NETWORK ||
-        header.link_state_type == OspfLinkStateType::SUMMARY_LINK_ASBR"
+        Verify = "header.link_state_type == OspfLinkStateType::SummaryLinkIpNetwork ||
+        header.link_state_type == OspfLinkStateType::SummaryLinkAsbr"
     )]
     pub header: OspfLinkStateAdvertisementHeader,
     pub network_mask: u32,
@@ -726,7 +699,7 @@ impl fmt::Display for OspfTosRoute {
 /// (0.0.0.0) and the Network Mask is set to 0.0.0.0.
 #[derive(Debug, NomBE)]
 pub struct OspfASExternalLinkAdvertisement {
-    #[nom(Verify = "header.link_state_type == OspfLinkStateType::AS_EXTERNAL_LINK")]
+    #[nom(Verify = "header.link_state_type == OspfLinkStateType::ASExternalLink")]
     pub header: OspfLinkStateAdvertisementHeader,
     pub network_mask: u32,
     pub external_and_reserved: u8,
@@ -798,7 +771,7 @@ impl OspfExternalTosRoute {
 /// NSSA AS-External LSA (type 7, rfc1587, rfc3101)
 #[derive(Debug, NomBE)]
 pub struct OspfNSSAExternalLinkAdvertisement {
-    #[nom(Verify = "header.link_state_type == OspfLinkStateType::NSSA_AS_EXTERNAL")]
+    #[nom(Verify = "header.link_state_type == OspfLinkStateType::NSSAASExternal")]
     pub header: OspfLinkStateAdvertisementHeader,
     pub network_mask: u32,
     pub external_and_tos: u8,
@@ -860,9 +833,9 @@ impl OspfNSSAExternalLinkAdvertisement {
 #[derive(Debug, NomBE)]
 pub struct OspfOpaqueLinkAdvertisement {
     #[nom(
-        Verify = "header.link_state_type == OspfLinkStateType::OPAQUE_LINK_LOCAL_SCOPE ||
-        header.link_state_type == OspfLinkStateType::OPAQUE_AREA_LOCAL_SCOPE ||
-        header.link_state_type == OspfLinkStateType::OPAQUE_AS_WIDE_SCOPE"
+        Verify = "header.link_state_type == OspfLinkStateType::OpaqueLinkLocalScope ||
+        header.link_state_type == OspfLinkStateType::OpaqueAreaLocalScope ||
+        header.link_state_type == OspfLinkStateType::OpaqueASWideScope"
     )]
     pub header: OspfLinkStateAdvertisementHeader,
     pub data: Vec<u8>,

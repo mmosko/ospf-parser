@@ -92,39 +92,39 @@ impl<'a> Parse<&'a [u8]> for OspfLinkStateAdvertisement {
         let (_, word) = peek(be_u32)(input)?;
         let ls_type = (word & 0xff) as u8;
         match OspfLinkStateType(ls_type) {
-            OspfLinkStateType::ROUTER_LINKS => map(
+            OspfLinkStateType::RouterLinks => map(
                 OspfRouterLinksAdvertisement::parse,
                 OspfLinkStateAdvertisement::RouterLinks,
             )(input),
-            OspfLinkStateType::NETWORK_LINKS => map(
+            OspfLinkStateType::NetworkLinks => map(
                 OspfNetworkLinksAdvertisement::parse,
                 OspfLinkStateAdvertisement::NetworkLinks,
             )(input),
-            OspfLinkStateType::SUMMARY_LINK_IP_NETWORK => map(
+            OspfLinkStateType::SummaryLinkIpNetwork => map(
                 OspfSummaryLinkAdvertisement::parse,
                 OspfLinkStateAdvertisement::SummaryLinkIpNetwork,
             )(input),
-            OspfLinkStateType::SUMMARY_LINK_ASBR => map(
+            OspfLinkStateType::SummaryLinkAsbr => map(
                 OspfSummaryLinkAdvertisement::parse,
                 OspfLinkStateAdvertisement::SummaryLinkAsbr,
             )(input),
-            OspfLinkStateType::AS_EXTERNAL_LINK => map(
+            OspfLinkStateType::ASExternalLink => map(
                 OspfASExternalLinkAdvertisement::parse,
                 OspfLinkStateAdvertisement::ASExternalLink,
             )(input),
-            OspfLinkStateType::NSSA_AS_EXTERNAL => map(
+            OspfLinkStateType::NSSAASExternal => map(
                 OspfNSSAExternalLinkAdvertisement::parse,
                 OspfLinkStateAdvertisement::NSSAASExternal,
             )(input),
-            OspfLinkStateType::OPAQUE_LINK_LOCAL_SCOPE => map(
+            OspfLinkStateType::OpaqueLinkLocalScope => map(
                 OspfOpaqueLinkAdvertisement::parse,
                 OspfLinkStateAdvertisement::OpaqueLinkLocalScope,
             )(input),
-            OspfLinkStateType::OPAQUE_AREA_LOCAL_SCOPE => map(
+            OspfLinkStateType::OpaqueAreaLocalScope => map(
                 OspfOpaqueLinkAdvertisement::parse,
                 OspfLinkStateAdvertisement::OpaqueAreaLocalScope,
             )(input),
-            OspfLinkStateType::OPAQUE_AS_WIDE_SCOPE => map(
+            OspfLinkStateType::OpaqueASWideScope => map(
                 OspfOpaqueLinkAdvertisement::parse,
                 OspfLinkStateAdvertisement::OpaqueASWideScope,
             )(input),

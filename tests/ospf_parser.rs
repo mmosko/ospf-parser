@@ -160,7 +160,7 @@ pub fn test_ls_update() {
         assert_eq!(pkt.lsa.len(), 1);
         let lsa0 = &pkt.lsa[0];
         if let OspfLinkStateAdvertisement::RouterLinks(lsa) = lsa0 {
-            assert_eq!(lsa.header.link_state_type, OspfLinkStateType::ROUTER_LINKS);
+            assert_eq!(lsa.header.link_state_type, OspfLinkStateType::RouterLinks);
             assert_eq!(
                 lsa.header.advertising_router(),
                 Ipv4Addr::new(192, 168, 170, 8)
@@ -169,7 +169,7 @@ pub fn test_ls_update() {
             let link0 = &lsa.links[0];
             assert_eq!(link0.link_id(), Ipv4Addr::new(192, 168, 170, 0));
             assert_eq!(link0.link_data(), Ipv4Addr::new(255, 255, 255, 0));
-            assert_eq!(link0.link_type, OspfRouterLinkType::STUB);
+            assert_eq!(link0.link_type, OspfRouterLinkType::Stub);
             assert_eq!(link0.tos_list.len(), 0);
         } else {
             panic!("wrong LSA type");
@@ -396,7 +396,7 @@ pub fn test_ospf_database_description_packet_display() {
     let lsa_header = OspfLinkStateAdvertisementHeader {
         ls_age: 3600,
         options: 0x42,
-        link_state_type: OspfLinkStateType::ROUTER_LINKS,
+        link_state_type: OspfLinkStateType::RouterLinks,
         link_state_id: Ipv4Addr::new(10, 1, 1, 2).into(),
         advertising_router: Ipv4Addr::new(10, 1, 1, 1).into(),
         ls_seq_number: 0x80000001,
@@ -468,7 +468,7 @@ pub fn test_ospf_link_state_update_packet_display() {
     let lsa_header = OspfLinkStateAdvertisementHeader {
         ls_age: 3600,
         options: 0x42,
-        link_state_type: OspfLinkStateType::ROUTER_LINKS,
+        link_state_type: OspfLinkStateType::RouterLinks,
         link_state_id: Ipv4Addr::new(10, 1, 1, 2).into(),
         advertising_router: Ipv4Addr::new(10, 1, 1, 1).into(),
         ls_seq_number: 0x80000001,
