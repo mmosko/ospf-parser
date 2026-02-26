@@ -374,7 +374,7 @@ impl display OspfLinkStateType {
 /// which instance is more recent.  This is accomplished by examining
 /// the LS age, LS sequence number and LS checksum fields that are also
 /// contained in the link state advertisement header.
-#[derive(Debug, NomBE, Eq, PartialEq, Hash)]
+#[derive(Debug, NomBE, Eq, PartialEq, Hash, Copy, Clone)]
 pub struct OspfLinkStateAdvertisementHeader {
     pub ls_age: u16,
     pub options: u8,
