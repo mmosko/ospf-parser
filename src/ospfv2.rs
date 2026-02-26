@@ -347,7 +347,7 @@ impl fmt::Display for OspfLinkStateAcknowledgmentPacket {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, NomBE)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Hash, NomBE)]
 pub struct OspfLinkStateType(pub u8);
 
 newtype_enum! {
@@ -374,7 +374,7 @@ impl display OspfLinkStateType {
 /// which instance is more recent.  This is accomplished by examining
 /// the LS age, LS sequence number and LS checksum fields that are also
 /// contained in the link state advertisement header.
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Eq, PartialEq, Hash)]
 pub struct OspfLinkStateAdvertisementHeader {
     pub ls_age: u16,
     pub options: u8,
