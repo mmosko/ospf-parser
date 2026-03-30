@@ -412,7 +412,7 @@ impl fmt::Display for OspfLinkStateAdvertisementHeader {
 }
 
 /// Link state advertisements
-#[derive(Debug)]
+#[derive(Debug, Hash, Eq, PartialEq)]
 pub enum OspfLinkStateAdvertisement {
     RouterLinks(OspfRouterLinksAdvertisement),
     NetworkLinks(OspfNetworkLinksAdvertisement),
@@ -450,7 +450,7 @@ impl fmt::Display for OspfLinkStateAdvertisement {
 /// router's links to the area must be described in a single router
 /// links advertisement.  For details concerning the construction of
 /// router links advertisements, see Section 12.4.1.
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Hash, Eq, PartialEq)]
 pub struct OspfRouterLinksAdvertisement {
     #[nom(Verify = "header.link_state_type == OspfLinkStateType::RouterLinks")]
     pub header: OspfLinkStateAdvertisementHeader,
@@ -478,7 +478,7 @@ impl fmt::Display for OspfRouterLinksAdvertisement {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, NomBE)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, NomBE, Hash)]
 pub struct OspfRouterLinkType(pub u8);
 
 newtype_enum! {
@@ -491,7 +491,7 @@ impl display OspfRouterLinkType {
 }
 
 /// OSPF router link (i.e., interface)
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Hash, Eq, PartialEq)]
 pub struct OspfRouterLink {
     pub link_id: u32,
     pub link_data: u32,
@@ -533,7 +533,7 @@ impl OspfRouterLink {
 }
 
 /// OSPF Router Type Of Service (TOS)
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Hash, Eq, PartialEq)]
 pub struct OspfRouterTOS {
     pub tos: u8,
     pub reserved: u8,
@@ -567,7 +567,7 @@ impl fmt::Display for OspfRouterTOS {
 /// not be specified in the network links advertisement.  For details
 /// concerning the construction of network links advertisements, see
 /// Section 12.4.2.
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Hash, Eq, PartialEq)]
 pub struct OspfNetworkLinksAdvertisement {
     #[nom(Verify = "header.link_state_type == OspfLinkStateType::NetworkLinks")]
     pub header: OspfLinkStateAdvertisementHeader,
@@ -621,7 +621,7 @@ impl OspfNetworkLinksAdvertisement {
 /// advertise the location of each ASBR, consult Section 16.4.)  Other
 /// than the difference in the Link State ID field, the format of Type 3
 /// and 4 link state advertisements is identical.
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Hash, Eq, PartialEq)]
 pub struct OspfSummaryLinkAdvertisement {
     #[nom(
         Verify = "header.link_state_type == OspfLinkStateType::SummaryLinkIpNetwork ||
@@ -662,7 +662,7 @@ impl OspfSummaryLinkAdvertisement {
     }
 }
 
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Hash, Eq, PartialEq)]
 pub struct OspfTosRoute {
     pub tos: u8,
     #[nom(Parse = "be_u24")]
@@ -697,7 +697,7 @@ impl fmt::Display for OspfTosRoute {
 /// specific route exists to the destination.  When describing a default
 /// route, the Link State ID is always set to DefaultDestination
 /// (0.0.0.0) and the Network Mask is set to 0.0.0.0.
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Hash, Eq, PartialEq)]
 pub struct OspfASExternalLinkAdvertisement {
     #[nom(Verify = "header.link_state_type == OspfLinkStateType::ASExternalLink")]
     pub header: OspfLinkStateAdvertisementHeader,
@@ -742,7 +742,7 @@ impl OspfASExternalLinkAdvertisement {
     }
 }
 
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Hash, Eq, PartialEq)]
 pub struct OspfExternalTosRoute {
     pub tos: u8,
     #[nom(Parse = "be_u24")]
@@ -769,7 +769,7 @@ impl OspfExternalTosRoute {
 }
 
 /// NSSA AS-External LSA (type 7, rfc1587, rfc3101)
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Hash, Eq, PartialEq)]
 pub struct OspfNSSAExternalLinkAdvertisement {
     #[nom(Verify = "header.link_state_type == OspfLinkStateType::NSSAASExternal")]
     pub header: OspfLinkStateAdvertisementHeader,
@@ -830,7 +830,7 @@ impl OspfNSSAExternalLinkAdvertisement {
 /// be link-local (type-9), area-local (type-10), or the entire OSPF
 /// routing domain (type-11).  Section 3 of this document describes the
 /// flooding procedures for the Opaque LSA.
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Hash, Eq, PartialEq)]
 pub struct OspfOpaqueLinkAdvertisement {
     #[nom(
         Verify = "header.link_state_type == OspfLinkStateType::OpaqueLinkLocalScope ||
