@@ -237,6 +237,27 @@ fn parse_ospf_tos_routes_f(input: &[u8], packet_length: u16) -> IResult<&[u8], V
     Ok((rem, routes))
 }
 
+pub(crate) fn parse_opaque_data(
+    lsa_length: u16,
+) -> impl Fn(&[u8]) -> IResult<&[u8], Vec<u8>> {
+    move |input: &[u8]| parse_opaque_data_f(input, lsa_length)
+}
+
+fn parse_opaque_data_f(input: &[u8], lsa_length: u16) -> IResult<&[u8], Vec<u8>> {
+    if lsa_length == 20 {
+        return Ok((input, Vec::new()));
+    }
+
+    // 28 is the offset of the first TOS Route
+    if lsa_length < 20 || lsa_length as usize - 20 > input.len() {
+        return Err(nom::Err::Error(make_error(input, ErrorKind::LengthValue)));
+    }
+
+    let len = (lsa_length as usize).saturating_sub(20);
+    let (remaining_input, bytes) = nom::bytes::complete::take(len)(input)?;
+    Ok((remaining_input, bytes.to_vec()))
+}
+
 pub(crate) fn parse_ospfv3_router_links(
     packet_length: u16,
 ) -> impl Fn(&[u8]) -> IResult<&[u8], Vec<Ospfv3RouterLink>> {

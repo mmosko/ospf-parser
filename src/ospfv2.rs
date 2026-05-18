@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::parser::{parse_ospf_external_tos_routes, parse_ospf_tos_routes, parse_ospf_vec_u32};
+use crate::parser::{parse_ospf_external_tos_routes, parse_ospf_tos_routes, parse_ospf_vec_u32, parse_opaque_data};
 use nom::bytes::complete::take;
 use nom::combinator::complete;
 use nom::combinator::map_parser;
@@ -838,6 +838,7 @@ pub struct OspfOpaqueLinkAdvertisement {
         header.link_state_type == OspfLinkStateType::OpaqueASWideScope"
     )]
     pub header: OspfLinkStateAdvertisementHeader,
+    #[nom(Parse = "parse_opaque_data(header.length)")]
     pub data: Vec<u8>,
 }
 
