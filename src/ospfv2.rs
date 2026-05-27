@@ -24,7 +24,7 @@ impl display OspfPacketType {
 }
 
 /// An OSPF version 2 packet
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Ospfv2Packet {
     Hello(OspfHelloPacket),
     DatabaseDescription(OspfDatabaseDescriptionPacket),

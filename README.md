@@ -1,9 +1,7 @@
-# ospf-parser
+# ospf-parser-ng
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE-MIT)
 [![Apache License 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE-APACHE)
-[![Build Status](https://travis-ci.org/rusticata/ospf-parser.svg?branch=master)](https://travis-ci.org/rusticata/ospf-parser)
-[![Crates.io Version](https://img.shields.io/crates/v/ospf-parser.svg)](https://crates.io/crates/ospf-parser)
 
 <!-- cargo-sync-readme start -->
 
@@ -14,7 +12,9 @@ A parser for the Open Shortest Path First version 2 ([OSPFv2]) and OSPF for IPv6
 implemented with the [nom](https://github.com/Geal/nom) parser combinator
 framework in pure Rust.
 
-The code is available on [Github](https://github.com/rusticata/ospf-parser)
+This fork is available at [ospf-parser-ng](https://github.com/mmosko/ospf-parser).
+
+Forked from [Rusticata version](https://github.com/rusticata/ospf-parser)
 and is part of the [Rusticata](https://github.com/rusticata) project.
 
 [OSPFv2]: https://tools.ietf.org/html/rfc2328 "OSPF Version 2, RFC 2328"
@@ -23,6 +23,11 @@ and is part of the [Rusticata](https://github.com/rusticata) project.
 <!-- cargo-sync-readme end -->
 
 ## Changes
+
+### 0.6.0
+
+- Fixes to parsing for certain packet types.
+- Added decorators for clone and equality.
 
 ### 0.5.0
 

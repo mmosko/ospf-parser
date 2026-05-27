@@ -1,12 +1,12 @@
 [package]
-name = "ospf-parser"
-version = "0.5.6"
+name = "ospf-parser-ng"
+version = "0.6.0"
 description = "Parser for the OSPF version 2 protocol"
 license = "MIT/Apache-2.0"
 keywords = ["OSPF","routing","protocol","parser","nom"]
 homepage = "https://github.com/rusticata/ospf-parser"
 repository = "https://github.com/rusticata/ospf-parser.git"
-authors = ["Pierre Chifflier <chifflier@wzdftpd.net>"]
+authors = ["Pierre Chifflier <chifflier@wzdftpd.net>", "Marc Mosko <marc@mosko.org>"]
 categories = ["parser-implementations"]
 readme = "README.md"
 edition = "2018"
