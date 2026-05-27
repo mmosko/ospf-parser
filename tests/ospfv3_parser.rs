@@ -1,5 +1,5 @@
 use hex_literal::hex;
-use ospf_parser::*;
+use ospf_parser_ng::*;
 use std::net::Ipv4Addr;
 
 #[test]

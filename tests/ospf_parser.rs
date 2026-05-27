@@ -1,6 +1,6 @@
 use hex_literal::hex;
 use nom_derive::Parse;
-use ospf_parser::*;
+use ospf_parser_ng::*;
 use std::net::Ipv4Addr;
 
 #[test]
@@ -316,7 +316,7 @@ pub fn test_link_state_request_with_auth() {
             0x98, 0x35, 0xda, 0x13, 0xd5, 0x3f, 0xe9, 0x51,
             0xd8, 0x40, 0xf4, 0xab, 0x10, 0x17, 0xc0, 0x2c];
 
-    let (remaining, ospfv2_packet) = ospf_parser::parse_ospfv2_packet(&lsa_request_bytes).unwrap();
+    let (remaining, ospfv2_packet) = ospf_parser_ng::parse_ospfv2_packet(&lsa_request_bytes).unwrap();
     let Ospfv2Packet::LinkStateRequest(lsa_request) = ospfv2_packet else {
         panic!("failed to parse Ospfv2");
     };
@@ -507,6 +507,6 @@ fn test_opaque_payload() {
         0x00, 0x02, 0x42, 0x0b, 0xff, 0x00, 0x00, 0x00, 0x0a, 0x01, 0x01, 0x63, 0x80, 0x00, 0x00, 0x01,
         0x5a, 0xa9, 0x00, 0x18, 0xba, 0xdc, 0x0f, 0xfe
     ];
-    let (_remaining, _frame) = ospf_parser::parse_ospfv2_packet(payload.as_slice()).unwrap();
+    let (_remaining, _frame) = ospf_parser_ng::parse_ospfv2_packet(payload.as_slice()).unwrap();
 
 }
