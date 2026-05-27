@@ -10,7 +10,7 @@ use rusticata_macros::newtype_enum;
 use std::net::Ipv4Addr;
 
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, NomBE)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Hash, NomBE)]
 pub struct OspfPacketType(pub u8);
 
 newtype_enum! {
@@ -39,7 +39,7 @@ pub enum Ospfv2Packet {
 /// contains all the necessary information to determine whether the
 /// packet should be accepted for further processing.  This
 /// determination is described in Section 8.2 of the specification.
-#[derive(Debug, NomBE, Clone)]
+#[derive(Debug, NomBE, Clone, Eq, PartialEq)]
 pub struct Ospfv2PacketHeader {
     #[nom(Verify = "*version == 2")]
     pub version: u8,
@@ -89,7 +89,7 @@ impl fmt::Display for Ospfv2PacketHeader {
 /// explanation of the receive processing for Hello packets is presented
 /// in Section 10.5.  The sending of Hello packets is covered in Section
 /// 9.5.
-#[derive(Debug, NomBE)]
+#[derive(Debug, Clone, Eq, PartialEq, NomBE)]
 pub struct OspfHelloPacket {
     #[nom(Verify = "header.packet_type == OspfPacketType::Hello")]
     pub header: Ospfv2PacketHeader,
@@ -151,7 +151,7 @@ impl fmt::Display for OspfHelloPacket {
 /// (polls) which are acknowledged by Database Description packets sent
 /// by the slave (responses).  The responses are linked to the polls via
 /// the packets' DD sequence numbers.
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Clone, Eq, PartialEq)]
 pub struct OspfDatabaseDescriptionPacket {
     #[nom(Verify = "header.packet_type == OspfPacketType::DatabaseDescription")]
     pub header: Ospfv2PacketHeader,
@@ -201,7 +201,7 @@ impl fmt::Display for OspfDatabaseDescriptionPacket {
 /// The sending of Link State Request packets is documented in Section
 /// 10.9.  The reception of Link State Request packets is documented in
 /// Section 10.7.
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Clone, Eq, PartialEq)]
 pub struct OspfLinkStateRequestPacket {
     #[nom(Verify = "header.packet_type == OspfPacketType::LinkStateRequest")]
     pub header: Ospfv2PacketHeader,
@@ -229,7 +229,7 @@ impl fmt::Display for OspfLinkStateRequestPacket {
     }
 }
 
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Clone, Eq, PartialEq)]
 pub struct OspfLinkStateRequest {
     // XXX should be a OspfLinkStateType, but it is only an u8
     pub link_state_type: u32,
@@ -273,7 +273,7 @@ impl fmt::Display for OspfLinkStateRequest {
 /// always carried by unicast Link State Update packets.  For more
 /// information on the reliable flooding of link state advertisements,
 /// consult Section 13.
-#[derive(Debug, NomBE, Clone)]
+#[derive(Debug, NomBE, Clone, Eq, PartialEq)]
 pub struct OspfLinkStateUpdatePacket {
     #[nom(Verify = "header.packet_type == OspfPacketType::LinkStateUpdate")]
     pub header: Ospfv2PacketHeader,
@@ -319,7 +319,7 @@ impl fmt::Display for OspfLinkStateUpdatePacket {
 /// The format of this packet is similar to that of the Data Description
 /// packet.  The body of both packets is simply a list of link state
 /// advertisement headers.
-#[derive(Debug, NomBE)]
+#[derive(Debug, NomBE, Clone, Eq, PartialEq)]
 pub struct OspfLinkStateAcknowledgmentPacket {
     #[nom(Verify = "header.packet_type == OspfPacketType::LinkStateAcknowledgment")]
     pub header: Ospfv2PacketHeader,
